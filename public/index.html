@@ -16,8 +16,10 @@ async function createRoom() {
   const res = await fetch("/create-room");
   const data = await res.json();
 
-  const joinLink = `http://localhost:3000/join/${data.roomId}`;
-  const viewLink = `http://localhost:3000/view/${data.roomId}`;
+const baseUrl = window.location.origin;
+
+const joinLink = `${baseUrl}/join/${data.roomId}`;
+const viewLink = `${baseUrl}/view/${data.roomId}`;
 
   document.getElementById("link").innerText = "Join: " + joinLink;
   document.getElementById("viewer").innerText = "Viewer: " + viewLink;
