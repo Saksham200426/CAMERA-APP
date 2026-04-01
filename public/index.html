@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Camera App</title>
+</head>
+<body>
+
+  <h1>Create Session</h1>
+<button onclick="createRoom()">Create Link</button>
+
+<p id="link"></p>
+<p id="viewer"></p>
+
+<script>
+async function createRoom() {
+  const res = await fetch("/create-room");
+  const data = await res.json();
+
+  const joinLink = `http://localhost:3000/join/${data.roomId}`;
+  const viewLink = `http://localhost:3000/view/${data.roomId}`;
+
+  document.getElementById("link").innerText = "Join: " + joinLink;
+  document.getElementById("viewer").innerText = "Viewer: " + viewLink;
+}
+</script>
+</body>
+</html>

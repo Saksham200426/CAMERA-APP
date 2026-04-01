@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Join</title>
+</head>
+<body>
+
+<h2>Start Camera</h2>
+<button onclick="startCamera()">Start Camera & Mic</button>
+
+<br><br>
+
+<video id="video" autoplay playsinline width="400"></video>
+
+<script src="/socket.io/socket.io.js"></script>
+
+<script>
+const socket = io();
+const roomId = window.location.pathname.split("/")[2];
+
+let pc;
+let stream;
+
+async function startCamera() {
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: true,
+      audio: true
+    });
+
+    document.getElementById("video").srcObject = stream;
+
+    pc = new RTCPeerConnection({
+      iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+    });
+
+    stream.getTracks().forEach(track => pc.addTrack(track, stream));
+
+    pc.onicecandidate = (e) => {
+      if (e.candidate) {
+        socket.emit("ice-candidate", { roomId, candidate: e.candidate });
+      }
+    };
+
+    socket.on("ice-candidate", async (candidate) => {
+      try {
+        await pc.addIceCandidate(candidate);
+      } catch {}
+    });
+
+    socket.on("answer", async (answer) => {
+      await pc.setRemoteDescription(answer);
+    });
+
+    socket.on("room-full", () => {
+      alert("Room full hai ❌");
+    });
+
+    // join room
+    socket.emit("join-room", roomId);
+
+    // wait for viewer
+    socket.on("user-joined", async () => {
+      console.log("Viewer joined");
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      socket.emit("offer", { roomId, offer });
+    });
+
+  } catch (err) {
+    alert("Permission denied");
+  }
+}
+</script>
+
+</body>
+</html>
